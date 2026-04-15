@@ -1,0 +1,54 @@
+.card {
+    background: linear-gradient(180deg, rgba(18, 26, 43, 0.96), rgba(12, 18, 31, 0.96));
+    border: 1px solid rgba(140, 170, 210, 0.16);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow:
+            0 12px 40px rgba(0, 0, 0, 0.35),
+            inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+}
+
+.cardTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.cardTop h2 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.2;
+    color: #f4f8ff;
+}
+
+.details {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+}
+
+.detailRow {
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(140, 170, 210, 0.1);
+}
+
+.detailRow dt {
+    margin: 0 0 6px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8ea3bf;
+}
+
+.detailRow dd {
+    margin: 0;
+    font-size: 15px;
+    color: #f2f7ff;
+    word-break: break-word;
+}

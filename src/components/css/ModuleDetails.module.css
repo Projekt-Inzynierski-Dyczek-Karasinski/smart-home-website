@@ -1,0 +1,117 @@
+.wrapper {
+    display: grid;
+    gap: 20px;
+}
+
+.backButton {
+    width: fit-content;
+    padding: 10px 14px;
+    border: 1px solid rgba(140, 170, 210, 0.16);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #e5eefb;
+    cursor: pointer;
+}
+
+.header {
+    margin-bottom: 12px;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 40px;
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+}
+
+.detailsView {
+    display: grid;
+    gap: 20px;
+}
+
+.detailBox {
+    padding: 20px;
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(18, 26, 43, 0.96), rgba(12, 18, 31, 0.96));
+    border: 1px solid rgba(140, 170, 210, 0.16);
+}
+
+.detailBox h2 {
+    margin: 0 0 16px;
+    font-size: 22px;
+}
+
+.detailsList {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+}
+
+.detailRow {
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(140, 170, 210, 0.1);
+}
+
+.detailRow dt {
+    margin: 0 0 6px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8ea3bf;
+}
+
+.detailRow dd {
+    margin: 0;
+    font-size: 15px;
+    color: #f2f7ff;
+    word-break: break-word;
+}
+
+.devicesList {
+    display: grid;
+    gap: 14px;
+}
+
+.deviceCard {
+    padding: 16px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(140, 170, 210, 0.1);
+}
+
+.deviceCard h3 {
+    margin: 0 0 14px;
+    font-size: 18px;
+    color: #f4f8ff;
+}
+
+.lastValueRow {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.lastValueText {
+    color: #f2f7ff;
+    font-size: 15px;
+}
+
+.emptyState {
+    margin: 0;
+    color: #9fb0c7;
+}
+
+.state {
+    min-height: 50vh;
+    display: grid;
+    place-items: center;
+    color: #e5eefb;
+}
+
+@media (max-width: 600px) {
+    .header h1 {
+        font-size: 30px;
+    }
+}
