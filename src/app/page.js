@@ -30,7 +30,6 @@ export default function Home() {
   }, [])
   if (error) return <div>failed to load</div>
   if (isLoading) return <div>loading...</div>
-  // if (loading) return <p>Ładowanie...</p>
   return (
       <div className={styles.page}>
         <main className={styles.main}>
