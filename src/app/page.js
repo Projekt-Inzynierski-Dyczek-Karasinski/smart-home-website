@@ -1,15 +1,19 @@
 'use client'
 import {useState, useEffect} from 'react'
+import useSWR from 'swr'
 
 import Image from "next/image";
 import styles from "./page.module.css";
 
 import Link from 'next/link'
 
+const fetcher = (...args) => fetch(...args).then(res => res.json())
+
 export default function Home() {
 
   const [dane, setDane] = useState(null)
   const [loading, setLoading] = useState(true)
+  const { data, error, isLoading } = useSWR(`${process.env.NEXT_PUBLIC_API_URL}/api/modules`, fetcher)
 
   const [test, setTest] = useState("nie")
   console.log("tak")
@@ -24,14 +28,14 @@ export default function Home() {
           console.log(data)
         })
   }, [])
-
+  if (error) return <div>failed to load</div>
+  if (isLoading) return <div>loading...</div>
   // if (loading) return <p>Ładowanie...</p>
   return (
       <div className={styles.page}>
         <main className={styles.main}>
           <pre>{JSON.stringify(dane, null, 2)}</pre>
-          <Link href="/test">to test</Link>
-          halo
+          <pre>{JSON.stringify(data, null, 2)}</pre>
         </main>
       </div>
   );
