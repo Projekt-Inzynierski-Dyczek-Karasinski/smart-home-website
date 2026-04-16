@@ -1,6 +1,26 @@
 import styles from './css/ModuleCard.module.css'
+import useSWR from "swr";
+
+const fetcher = async (url) => {
+    const res = await fetch(url)
+
+    if (res.status === 404) {
+        return null
+    }
+
+    if (!res.ok) {
+        throw new Error('Błąd pobierania danych')
+    }
+
+    return res.json()
+}
 
 export default function ModuleCard({ module }) {
+    const {data: batteryData, error, isLoading} = useSWR(`${process.env.NEXT_PUBLIC_API_URL}/api/modules/${module.id}/devices/1/readings?limit=1`, fetcher)
+    console.log(error)
+    // console.log(isLoading ? "..." : batteryData?.device_readings[0]?.value)
+    const batteryValue = batteryData?.device_readings?.[0]?.value
+
     return (
         <article className={styles.card}>
             <div className={styles.cardTop}>
@@ -25,6 +45,15 @@ export default function ModuleCard({ module }) {
                 <div className={styles.detailRow}>
                     <dt>Adres logiczny</dt>
                     <dd>{module.logic_address}</dd>
+                </div>
+
+                <div className={styles.detailRow}>
+                    <dt>Naładowanie baterii</dt>
+                    <dd>{isLoading
+                        ? '...'
+                        : batteryValue != null
+                            ? `${batteryValue}%`
+                            : 'brak danych'}</dd>
                 </div>
             </dl>
         </article>

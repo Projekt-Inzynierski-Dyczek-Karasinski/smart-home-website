@@ -83,7 +83,7 @@
 
 .deviceCard h3 {
     margin: 0 0 14px;
-    font-size: 18px;
+    font-size: 24px;
     color: #f4f8ff;
 }
 
@@ -115,3 +115,40 @@
         font-size: 30px;
     }
 }
+
+.lastValues {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.lastValuesLabel {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.valuesList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.valueRow {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.valueWithUnit {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.valuePlaceholder {
+    font-size: 1rem;
+    font-weight: 500;
+}
+

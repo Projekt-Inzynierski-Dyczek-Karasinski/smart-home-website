@@ -3,6 +3,8 @@
 import useSWR from 'swr'
 import styles from './css/ModuleDetails.module.css'
 
+import SensorCard from "@/components/SensorCard";
+
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
 export default function ModuleDetails({ module, onBack }) {
@@ -84,30 +86,7 @@ export default function ModuleDetails({ module, onBack }) {
                     ) : (
                         <div className={styles.devicesList}>
                             {sensors.map((device) => (
-                                <article key={device.id} className={styles.deviceCard}>
-                                    <h3>{device.name}</h3>
-
-                                    <div className={styles.deviceMeta}>
-                                        <div className={styles.deviceMetaItem}>
-                                            <span className={styles.deviceMetaLabel}>Parametry</span>
-                                            <div className={styles.valuesList}>
-                                                {(device.config?.values ?? []).map((value) => (
-                                                    <div key={value.index} className={styles.valueRow}>
-                                                        <span>{value.label ?? '—'}</span>
-                                                        <span>{value.unit ?? '—'}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div className={styles.deviceMetaItem}>
-                                            <span className={styles.deviceMetaLabel}>Ostatnia wartość</span>
-                                            <span className={styles.placeholderValue}>
-                                                Tutaj pojawi się ostatnia wartość po osobnym fetche
-                                            </span>
-                                        </div>
-                                    </div>
-                                </article>
+                                <SensorCard key={device.id} device={device} moduleId={module.id} />
                             ))}
                         </div>
                     )}
