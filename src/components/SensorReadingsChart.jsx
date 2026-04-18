@@ -19,13 +19,38 @@ const toInputDateTime = (value) => {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
-const getDisplayValue = (value) => {
+const parseReadingValue = (value) => {
     if (Array.isArray(value)) {
-        return value.map((item) => (item != null ? Number(item) : null)).filter((item) => item != null)
+        return value.map((item) => {
+            const parsed = Number(item)
+            return Number.isNaN(parsed) ? null : parsed
+        })
     }
-    if (value == null) return null
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+
+        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+            try {
+                const parsedArray = JSON.parse(trimmed)
+                if (Array.isArray(parsedArray)) {
+                    return parsedArray.map((item) => {
+                        const parsed = Number(item)
+                        return Number.isNaN(parsed) ? null : parsed
+                    })
+                }
+            } catch (error) {
+                // fallback below
+            }
+        }
+
+        const parsed = Number(trimmed)
+        return Number.isNaN(parsed) ? [] : [parsed]
+    }
+
+    if (value == null) return []
     const parsed = Number(value)
-    return Number.isNaN(parsed) ? null : parsed
+    return Number.isNaN(parsed) ? [] : [parsed]
 }
 
 const createYAxisTicks = (min, max, tickCount = 5) => {
@@ -38,6 +63,8 @@ const createYAxisTicks = (min, max, tickCount = 5) => {
     const step = (max - min) / (tickCount - 1)
     return Array.from({ length: tickCount }, (_, index) => min + step * index)
 }
+
+const COLORS = ['#76a9ff', '#7ce7b2', '#ff9f7c', '#d58cff', '#ffd36e']
 
 export default function SensorReadingsChart({ sensors = [], moduleId }) {
     const defaultFrom = useMemo(() => {
@@ -56,6 +83,9 @@ export default function SensorReadingsChart({ sensors = [], moduleId }) {
     const [error, setError] = useState('')
     const [series, setSeries] = useState([])
 
+    const selectedSensor = sensors.find((sensor) => String(sensor.logic_id) === String(selectedLogicId))
+    const chartLabels = selectedSensor?.config?.values ?? []
+
     const handleFetch = async () => {
         if (!selectedLogicId || !moduleId) return
 
@@ -67,17 +97,12 @@ export default function SensorReadingsChart({ sensors = [], moduleId }) {
             const data = await fetcher(url)
 
             const readings = data?.device_readings ?? []
-            const normalized = readings.map((reading) => {
-                const displayValue = getDisplayValue(reading?.value)
-                const y = Array.isArray(displayValue)
-                    ? displayValue[0]
-                    : displayValue
-
-                return {
+            const normalized = readings
+                .map((reading) => ({
                     timestamp: reading.timestamp,
-                    value: y,
-                }
-            }).filter((item) => item.timestamp && item.value != null)
+                    values: parseReadingValue(reading?.value),
+                }))
+                .filter((item) => item.timestamp && item.values.length > 0)
 
             setSeries(normalized)
         } catch (e) {
@@ -88,37 +113,59 @@ export default function SensorReadingsChart({ sensors = [], moduleId }) {
         }
     }
 
-    const chartData = series
     const width = 900
     const height = 320
     const padding = 40
 
-    const values = chartData.map((item) => item.value)
-    const rawMinY = values.length ? Math.min(...values) : 0
-    const rawMaxY = values.length ? Math.max(...values) : 1
+    const chartIndexes = chartLabels.map((item) => Number(item.index)).filter((index) => Number.isFinite(index))
+    const xTickStep = Math.max(1, Math.ceil(series.length / 6))
 
-    const yPadding = rawMinY === rawMaxY ? 1 : (rawMaxY - rawMinY)
-    const minY = rawMinY
-    const maxY = rawMaxY 
-    const rangeY = maxY - minY || 1
+    const chartConfigs = chartIndexes.map((valueIndex, chartPos) => {
+        const labelInfo = chartLabels.find((item) => Number(item.index) === Number(valueIndex))
 
-    const yTicks = createYAxisTicks(minY, maxY, 5)
+        const valuesForSeries = series
+            .map((item) => item.values[valueIndex])
+            .filter((value) => value != null)
 
-    const points = chartData.map((item, index) => {
-        const x = chartData.length <= 1
-            ? padding
-            : padding + (index / (chartData.length - 1)) * (width - padding * 2)
+        const minY = valuesForSeries.length ? Math.min(...valuesForSeries) : 0
+        const maxY = valuesForSeries.length ? Math.max(...valuesForSeries) : 1
+        const rangeY = maxY - minY || 1
 
-        const y = height - padding - ((item.value - minY) / rangeY) * (height - padding * 2)
+        const yTicks = createYAxisTicks(minY, maxY, 5)
 
-        return { x, y, ...item }
+        const points = series
+            .map((item, index) => {
+                const value = item.values[valueIndex]
+                if (value == null) return null
+
+                const x = series.length <= 1
+                    ? padding
+                    : padding + (index / (series.length - 1)) * (width - padding * 2)
+
+                const y = height - padding - ((value - minY) / rangeY) * (height - padding * 2)
+
+                return { x, y, value, timestamp: item.timestamp }
+            })
+            .filter(Boolean)
+
+        const path = points
+            .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
+            .join(' ')
+
+        return {
+            valueIndex,
+            chartPos,
+            label: labelInfo?.label ?? `Wartość ${valueIndex}`,
+            unit: labelInfo?.unit ?? '',
+            precision: labelInfo?.precision ?? 2,
+            points,
+            path,
+            yTicks,
+            minY,
+            maxY,
+            color: COLORS[chartPos % COLORS.length],
+        }
     })
-
-    const path = points
-        .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
-        .join(' ')
-
-    const xTickStep = Math.max(1, Math.ceil(points.length / 6))
 
     return (
         <section className={styles.chartBox}>
@@ -176,55 +223,71 @@ export default function SensorReadingsChart({ sensors = [], moduleId }) {
             {error && <p className={styles.error}>{error}</p>}
 
             <div className={styles.chartArea}>
-                {points.length === 0 ? (
+                {chartConfigs.length === 0 ? (
                     <p className={styles.empty}>Brak danych do wyświetlenia</p>
                 ) : (
-                    <svg viewBox={`0 0 ${width} ${height}`} className={styles.svg}>
-                        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} className={styles.axis} />
-                        <line x1={padding} y1={padding} x2={padding} y2={height - padding} className={styles.axis} />
+                    <div className={styles.multiCharts}>
+                        {chartConfigs.map((chart) => (
+                            <div key={chart.valueIndex} className={styles.singleChart}>
+                                <h3 className={styles.chartTitle}>
+                                    {chart.label}
+                                    {chart.unit ? ` (${chart.unit})` : ''}
+                                </h3>
 
-                        {yTicks.map((tick) => {
-                            const tickY = height - padding - ((tick - minY) / rangeY) * (height - padding * 2)
+                                <svg viewBox={`0 0 ${width} ${height}`} className={styles.svg}>
+                                    <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} className={styles.axis} />
+                                    <line x1={padding} y1={padding} x2={padding} y2={height - padding} className={styles.axis} />
 
-                            return (
-                                <g key={tick}>
-                                    <line
-                                        x1={padding - 6}
-                                        y1={tickY}
-                                        x2={padding}
-                                        y2={tickY}
-                                        className={styles.axis}
-                                    />
-                                    <text x={padding - 10} y={tickY + 4} textAnchor="end" className={styles.yLabel}>
-                                        {Math.round(tick * 100) / 100}
-                                    </text>
-                                </g>
-                            )
-                        })}
+                                    {chart.yTicks.map((tick) => {
+                                        const tickY = height - padding - ((tick - chart.minY) / (chart.maxY - chart.minY || 1)) * (height - padding * 2)
 
-                        {path && <path d={path} className={styles.line} />}
+                                        return (
+                                            <g key={tick}>
+                                                <line
+                                                    x1={padding - 6}
+                                                    y1={tickY}
+                                                    x2={padding}
+                                                    y2={tickY}
+                                                    className={styles.axis}
+                                                />
+                                                <text x={padding - 10} y={tickY + 4} textAnchor="end" className={styles.yLabel}>
+                                                    {Number(tick).toFixed(chart.precision)}
+                                                </text>
+                                            </g>
+                                        )
+                                    })}
 
-                        {points.map((point, index) => (
-                            <g key={`${point.timestamp}-${index}`}>
-                                {index % xTickStep === 0 || index === points.length - 1 ? (
-                                    <text
-                                        x={point.x}
-                                        y={height - 10}
-                                        textAnchor="middle"
-                                        className={styles.xLabel}
-                                    >
-                                        {new Date(point.timestamp).toLocaleString('pl-PL', {
-                                            day: '2-digit',
-                                            month: '2-digit',
-                                            year: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                        })}
-                                    </text>
-                                ) : null}
-                            </g>
+                                    {chart.path && (
+                                        <path
+                                            d={chart.path}
+                                            className={styles.line}
+                                            style={{ stroke: chart.color }}
+                                        />
+                                    )}
+
+                                    {series.map((point, index) => (
+                                        index % xTickStep === 0 || index === series.length - 1 ? (
+                                            <text
+                                                key={`${point.timestamp}-${index}`}
+                                                x={series.length <= 1 ? padding : padding + (index / (series.length - 1)) * (width - padding * 2)}
+                                                y={height - 10}
+                                                textAnchor="middle"
+                                                className={styles.xLabel}
+                                            >
+                                                {new Date(point.timestamp).toLocaleString('pl-PL', {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                })}
+                                            </text>
+                                        ) : null
+                                    ))}
+                                </svg>
+                            </div>
                         ))}
-                    </svg>
+                    </div>
                 )}
             </div>
         </section>
