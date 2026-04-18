@@ -82,9 +82,17 @@ export default function SensorReadingsChart({ sensors = [], moduleId }) {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [series, setSeries] = useState([])
+    const [hasFetched, setHasFetched] = useState(false)
 
     const selectedSensor = sensors.find((sensor) => String(sensor.logic_id) === String(selectedLogicId))
     const chartLabels = selectedSensor?.config?.values ?? []
+
+    const handleSensorChange = (e) => {
+        setSelectedLogicId(e.target.value)
+        setSeries([])
+        setError('')
+        setHasFetched(false)
+    }
 
     const handleFetch = async () => {
         if (!selectedLogicId || !moduleId) return
@@ -105,9 +113,11 @@ export default function SensorReadingsChart({ sensors = [], moduleId }) {
                 .filter((item) => item.timestamp && item.values.length > 0)
 
             setSeries(normalized)
+            setHasFetched(true)
         } catch (e) {
             setError('Nie udało się pobrać danych')
             setSeries([])
+            setHasFetched(true)
         } finally {
             setLoading(false)
         }
@@ -176,7 +186,7 @@ export default function SensorReadingsChart({ sensors = [], moduleId }) {
                     <span>Sensor</span>
                     <select
                         value={selectedLogicId}
-                        onChange={(e) => setSelectedLogicId(e.target.value)}
+                        onChange={handleSensorChange}
                     >
                         {sensors.map((sensor) => (
                             <option key={sensor.id} value={sensor.logic_id} className={styles.selectOption}>
@@ -222,74 +232,76 @@ export default function SensorReadingsChart({ sensors = [], moduleId }) {
 
             {error && <p className={styles.error}>{error}</p>}
 
-            <div className={styles.chartArea}>
-                {chartConfigs.length === 0 ? (
-                    <p className={styles.empty}>Brak danych do wyświetlenia</p>
-                ) : (
-                    <div className={styles.multiCharts}>
-                        {chartConfigs.map((chart) => (
-                            <div key={chart.valueIndex} className={styles.singleChart}>
-                                <h3 className={styles.chartTitle}>
-                                    {chart.label}
-                                    {chart.unit ? ` (${chart.unit})` : ''}
-                                </h3>
+            {hasFetched && (
+                <div className={styles.chartArea}>
+                    {chartConfigs.length === 0 ? (
+                        <p className={styles.empty}>Brak danych do wyświetlenia</p>
+                    ) : (
+                        <div className={styles.multiCharts}>
+                            {chartConfigs.map((chart) => (
+                                <div key={chart.valueIndex} className={styles.singleChart}>
+                                    <h3 className={styles.chartTitle}>
+                                        {chart.label}
+                                        {chart.unit ? ` (${chart.unit})` : ''}
+                                    </h3>
 
-                                <svg viewBox={`0 0 ${width} ${height}`} className={styles.svg}>
-                                    <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} className={styles.axis} />
-                                    <line x1={padding} y1={padding} x2={padding} y2={height - padding} className={styles.axis} />
+                                    <svg viewBox={`0 0 ${width} ${height}`} className={styles.svg}>
+                                        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} className={styles.axis} />
+                                        <line x1={padding} y1={padding} x2={padding} y2={height - padding} className={styles.axis} />
 
-                                    {chart.yTicks.map((tick) => {
-                                        const tickY = height - padding - ((tick - chart.minY) / (chart.maxY - chart.minY || 1)) * (height - padding * 2)
+                                        {chart.yTicks.map((tick) => {
+                                            const tickY = height - padding - ((tick - chart.minY) / (chart.maxY - chart.minY || 1)) * (height - padding * 2)
 
-                                        return (
-                                            <g key={tick}>
-                                                <line
-                                                    x1={padding - 6}
-                                                    y1={tickY}
-                                                    x2={padding}
-                                                    y2={tickY}
-                                                    className={styles.axis}
-                                                />
-                                                <text x={padding - 10} y={tickY + 4} textAnchor="end" className={styles.yLabel}>
-                                                    {Number(tick).toFixed(chart.precision)}
+                                            return (
+                                                <g key={tick}>
+                                                    <line
+                                                        x1={padding - 6}
+                                                        y1={tickY}
+                                                        x2={padding}
+                                                        y2={tickY}
+                                                        className={styles.axis}
+                                                    />
+                                                    <text x={padding - 10} y={tickY + 4} textAnchor="end" className={styles.yLabel}>
+                                                        {Number(tick).toFixed(chart.precision)}
+                                                    </text>
+                                                </g>
+                                            )
+                                        })}
+
+                                        {chart.path && (
+                                            <path
+                                                d={chart.path}
+                                                className={styles.line}
+                                                style={{ stroke: chart.color }}
+                                            />
+                                        )}
+
+                                        {series.map((point, index) => (
+                                            index % xTickStep === 0 || index === series.length - 1 ? (
+                                                <text
+                                                    key={`${point.timestamp}-${index}`}
+                                                    x={series.length <= 1 ? padding : padding + (index / (series.length - 1)) * (width - padding * 2)}
+                                                    y={height - 10}
+                                                    textAnchor="middle"
+                                                    className={styles.xLabel}
+                                                >
+                                                    {new Date(point.timestamp).toLocaleString('pl-PL', {
+                                                        day: '2-digit',
+                                                        month: '2-digit',
+                                                        year: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                    })}
                                                 </text>
-                                            </g>
-                                        )
-                                    })}
-
-                                    {chart.path && (
-                                        <path
-                                            d={chart.path}
-                                            className={styles.line}
-                                            style={{ stroke: chart.color }}
-                                        />
-                                    )}
-
-                                    {series.map((point, index) => (
-                                        index % xTickStep === 0 || index === series.length - 1 ? (
-                                            <text
-                                                key={`${point.timestamp}-${index}`}
-                                                x={series.length <= 1 ? padding : padding + (index / (series.length - 1)) * (width - padding * 2)}
-                                                y={height - 10}
-                                                textAnchor="middle"
-                                                className={styles.xLabel}
-                                            >
-                                                {new Date(point.timestamp).toLocaleString('pl-PL', {
-                                                    day: '2-digit',
-                                                    month: '2-digit',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                })}
-                                            </text>
-                                        ) : null
-                                    ))}
-                                </svg>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+                                            ) : null
+                                        ))}
+                                    </svg>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
         </section>
     )
 }
