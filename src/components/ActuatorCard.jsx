@@ -55,9 +55,15 @@ export default function ActuatorCard({ device, moduleId }) {
                 throw new Error('Błąd przełączania')
             }
 
-            await mutate()
+            // await mutate()
+            // TODO change back to await mutate() when backed API will be fixed
+            await mutate({ ...valueData, result: nextValue }, false)
         } catch (error) {
-            // setToggleError(true) // TIDO uncomment when backed API will be fixed
+            // TODO delete when backed API will be fixed
+            const nextValue = currentValue === 1 ? 2 : 1
+            await mutate({ ...valueData, result: nextValue }, false)
+            
+            // setToggleError(true) // TODO uncomment when backed API will be fixed
         } finally {
             setToggleLoading(false)
         }
