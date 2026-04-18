@@ -4,6 +4,7 @@ import useSWR from 'swr'
 import styles from './css/ModuleDetails.module.css'
 
 import SensorCard from "@/components/SensorCard";
+import ActuatorCard from "@/components/ActuatorCard";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
@@ -121,9 +122,7 @@ export default function ModuleDetails({ module, onBack }) {
                     ) : (
                         <div className={styles.devicesList}>
                             {actuators.map((device) => (
-                                <article key={device.id} className={styles.deviceCard}>
-                                    <h3>{device.name}</h3>
-                                </article>
+                                <ActuatorCard device={device} moduleId={module.id} key={device.id} />
                             ))}
                         </div>
                     )}
