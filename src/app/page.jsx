@@ -24,8 +24,21 @@ export default function Home() {
         fetcher
     )
 
-    if (error) return <div>Nie udało się załadować danych o modułach</div>
-    if (isLoading) return <div>Ładowanie...</div>
+    if (error) return (
+        <div className={styles.page}>
+            <main className={styles.main}>
+                <h1>Nie udało się załadować danych o modułach</h1>
+            </main>
+        </div>
+    )
+
+    if (isLoading) return (
+        <div className={styles.page}>
+            <main className={styles.main}>
+                <h1>Ładowanie...</h1>
+            </main>
+        </div>
+    )
 
     const modules = [...(moduleData?.modules ?? [])].sort((a, b) => a.id - b.id)
     return (

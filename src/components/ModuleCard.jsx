@@ -3,22 +3,13 @@ import useSWR from "swr";
 
 const fetcher = async (url) => {
     const res = await fetch(url)
-
-    if (res.status === 404) {
-        return null
-    }
-
-    if (!res.ok) {
-        throw new Error('Błąd pobierania danych')
-    }
-
+    if (res.status === 404)  return null
+    if (!res.ok)  throw new Error('Błąd pobierania danych')
     return res.json()
 }
 
 export default function ModuleCard({ module }) {
     const {data: batteryData, error, isLoading} = useSWR(`${process.env.NEXT_PUBLIC_API_URL}/api/modules/${module.id}/devices/1/readings?limit=1`, fetcher)
-    console.log(error)
-    // console.log(isLoading ? "..." : batteryData?.device_readings[0]?.value)
     const batteryValue = batteryData?.device_readings?.[0]?.value
 
     return (

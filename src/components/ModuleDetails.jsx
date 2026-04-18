@@ -7,6 +7,14 @@ import SensorCard from "@/components/SensorCard";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
+const batteryFetcher = async (url) => {
+    const res = await fetch(url)
+    if (res.status === 404)  return null
+    if (!res.ok)  throw new Error('Błąd pobierania danych')
+    return res.json()
+}
+
+
 export default function ModuleDetails({ module, onBack }) {
     const {
         data: moduleDevicesData,
@@ -16,6 +24,10 @@ export default function ModuleDetails({ module, onBack }) {
         module ? `${process.env.NEXT_PUBLIC_API_URL}/api/modules/${module.id}/devices` : null,
         fetcher
     )
+
+    const {data: batteryData, error: batteryError, isLoading : batteryIsLoading} = useSWR(`${process.env.NEXT_PUBLIC_API_URL}/api/modules/${module.id}/devices/1/readings?limit=1`, fetcher)
+    const batteryValue = batteryData?.device_readings?.[0]?.value
+
 
     const devices = moduleDevicesData?.module_devices ?? []
     const sensors = devices.filter((device) => device.type === 'sensor')
@@ -74,6 +86,15 @@ export default function ModuleDetails({ module, onBack }) {
                         <div className={styles.detailRow}>
                             <dt>Adres logiczny</dt>
                             <dd>{module.logic_address ?? '—'}</dd>
+                        </div>
+
+                        <div className={styles.detailRow}>
+                            <dt>Naładowanie baterii</dt>
+                            <dd>{batteryIsLoading
+                                ? '...'
+                                : batteryValue != null
+                                    ? `${batteryValue}%`
+                                    : 'brak danych'}</dd>
                         </div>
                     </dl>
                 </div>
