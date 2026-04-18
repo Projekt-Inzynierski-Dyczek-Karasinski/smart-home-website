@@ -1,17 +1,22 @@
 'use client'
 
+import {useState} from 'react'
 import useSWR from 'swr'
-import styles from './css/ModuleDetails.module.css'
+import styles from './css/SensorCard.module.css'
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
 export default function SensorCard({ device, moduleId }) {
-    const { data: readingsData } = useSWR(
+    const [forceLoading, setForceLoading] = useState(false)
+    const [forceError, setForceError] = useState(false)
+    const [forcedReading, setForcedReading] = useState(null)
+
+    const { data: readingsData, mutate } = useSWR(
         `${process.env.NEXT_PUBLIC_API_URL}/api/modules/${moduleId}/devices/${device.logic_id}/readings?limit=1`,
         fetcher
     )
 
-    const reading = readingsData?.device_readings?.[0]
+    const reading = forcedReading ?? readingsData?.device_readings?.[0]
     const rawValues = Array.isArray(reading?.value) ? reading.value : [reading?.value]
 
     const values = device.config?.values ?? []
@@ -19,9 +24,58 @@ export default function SensorCard({ device, moduleId }) {
         ? 'Ostatnie odczytane wartości'
         : 'Ostatnia odczytana wartość'
 
+    const handleForceRead = async () => {
+        setForceLoading(true)
+        setForceError(false)
+
+        try {
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/modules/${moduleId}/devices/${device.logic_id}/value?force=true`
+            )
+
+            if (!res.ok) {
+                throw new Error('Błąd odczytu')
+            }
+
+            const data = await res.json()
+            if (data?.result == null) {
+                throw new Error('Błąd odczytu')
+            }
+
+            setForcedReading({
+                value: data.result,
+                timestamp: new Date().toISOString(),
+            })
+
+            await mutate()
+        } catch (error) {
+            setForceError(true)
+        } finally {
+            setForceLoading(false)
+        }
+    }
+
     return (
         <article className={styles.deviceCard}>
-            <h3>{device.name}</h3>
+            <div className={styles.sensorHeader}>
+                <h3>{device.name}</h3>
+
+                <div className={styles.btnWrapper}>{forceError && (
+                    <p className={styles.readError}>Błąd odczytu</p>
+                )}
+
+                    <button
+                        type="button"
+                        className={styles.forceReadButton}
+                        onClick={handleForceRead}
+                        disabled={forceLoading}
+                    >
+                        {forceLoading ? 'Ładowanie...' : 'Wymuś nowy odczyt'}
+                    </button>
+                </div>
+
+            </div>
+
 
             {values.length > 0 && (
                 <div className={styles.lastValues}>
