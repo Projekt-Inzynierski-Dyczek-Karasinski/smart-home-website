@@ -5,6 +5,8 @@ import styles from './css/ModuleDetails.module.css'
 
 import SensorCard from "@/components/SensorCard";
 import ActuatorCard from "@/components/ActuatorCard";
+import SensorReadingsChart from "@/components/SensorReadingsChart";
+
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
@@ -113,6 +115,7 @@ export default function ModuleDetails({ module, onBack }) {
                         </div>
                     )}
                 </div>
+                <SensorReadingsChart sensors={sensors} moduleId={module.id} />
 
                 <div className={styles.detailBox}>
                     <h2>Aktuatory</h2>

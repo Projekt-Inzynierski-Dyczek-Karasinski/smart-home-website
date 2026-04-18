@@ -62,7 +62,7 @@ export default function ActuatorCard({ device, moduleId }) {
             // TODO delete when backed API will be fixed
             const nextValue = currentValue === 1 ? 2 : 1
             await mutate({ ...valueData, result: nextValue }, false)
-            
+
             // setToggleError(true) // TODO uncomment when backed API will be fixed
         } finally {
             setToggleLoading(false)

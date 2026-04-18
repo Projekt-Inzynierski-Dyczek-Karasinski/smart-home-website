@@ -1,0 +1,125 @@
+.chartBox {
+    padding: 20px;
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(18, 26, 43, 0.96), rgba(12, 18, 31, 0.96));
+    border: 1px solid rgba(140, 170, 210, 0.16);
+    display: grid;
+    gap: 16px;
+}
+
+.chartBox h2 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.controls {
+    display: grid;
+    grid-template-columns: minmax(160px, 220px) minmax(220px, 1fr) minmax(220px, 1fr) minmax(110px, 140px) auto;
+    gap: 12px;
+    align-items: end;
+}
+
+.field {
+    display: grid;
+    gap: 6px;
+    color: #dbe7f7;
+    font-size: 14px;
+    min-width: 0;
+}
+
+.field input,
+.field select {
+    width: 100%;
+    min-width: 0;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(140, 170, 210, 0.16);
+    background: rgba(255, 255, 255, 0.04);
+    color: #f4f8ff;
+    outline: none;
+}
+
+.showButton {
+    padding: 10px 16px;
+    border: 1px solid rgba(140, 170, 210, 0.16);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #f4f8ff;
+    cursor: pointer;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.showButton:disabled {
+    opacity: 0.7;
+    cursor: progress;
+}
+
+.error {
+    margin: 0;
+    color: #ff8b8b;
+}
+
+.chartArea {
+    min-height: 360px;
+    overflow-x: auto;
+}
+
+.empty {
+    margin: 0;
+    color: #9fb0c7;
+}
+
+.svg {
+    width: 100%;
+    min-width: 700px;
+    height: 320px;
+}
+
+.axis {
+    stroke: rgba(140, 170, 210, 0.35);
+    stroke-width: 1;
+}
+
+.line {
+    fill: none;
+    stroke: #76a9ff;
+    stroke-width: 3;
+}
+
+.point {
+    fill: #ffffff;
+    stroke: #76a9ff;
+    stroke-width: 2;
+}
+
+.xLabel,
+.yLabel {
+    fill: #cfe0f6;
+    font-size: 12px;
+}
+.selectOption {
+    background-color: #0f1726;
+    color: #f4f8ff;
+}
+
+
+@media (max-width: 900px) {
+    .controls {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .showButton {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 600px) {
+    .controls {
+        grid-template-columns: 1fr;
+    }
+
+    .showButton {
+        width: 100%;
+    }
+}
