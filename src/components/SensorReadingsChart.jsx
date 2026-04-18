@@ -64,7 +64,7 @@ const createYAxisTicks = (min, max, tickCount = 5) => {
     return Array.from({ length: tickCount }, (_, index) => min + step * index)
 }
 
-const COLORS = ['#76a9ff', '#7ce7b2', '#ff9f7c', '#d58cff', '#ffd36e']
+const COLORS = ['#ff9f7c', '#7ce7b2', '#76a9ff', '#d58cff', '#ffd36e']
 
 export default function SensorReadingsChart({ sensors = [], moduleId }) {
     const defaultFrom = useMemo(() => {
@@ -104,7 +104,7 @@ export default function SensorReadingsChart({ sensors = [], moduleId }) {
             const url = `${process.env.NEXT_PUBLIC_API_URL}/api/modules/${moduleId}/devices/${selectedLogicId}/readings?limit=${encodeURIComponent(limit)}&from=${encodeURIComponent(new Date(from).toISOString())}&to=${encodeURIComponent(new Date(to).toISOString())}`
             const data = await fetcher(url)
 
-            const readings = data?.device_readings ?? []
+            const readings = data?.device_readings.reverse() ?? []
             const normalized = readings
                 .map((reading) => ({
                     timestamp: reading.timestamp,
