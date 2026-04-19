@@ -8,14 +8,30 @@ const fetcher = async (url) => {
     return res.json()
 }
 
-export default function ModuleCard({ module }) {
+export default function ModuleCard({ module, onDelete, onClick }) {
     const {data: batteryData, error, isLoading} = useSWR(`${process.env.NEXT_PUBLIC_API_URL}/api/modules/${module.id}/devices/1/readings?limit=1`, fetcher)
     const batteryValue = batteryData?.device_readings?.[0]?.value
 
+    const handleDeleteClick = (e) => {
+        e.stopPropagation() // Zapobiegamy otwieraniu szczegółów modułu
+        onDelete?.(module)
+    }
+
+    const handleCardClick = () => {
+        onClick?.()
+    }
+
     return (
-        <article className={styles.card}>
+        <article className={styles.card} onClick={handleCardClick}>
             <div className={styles.cardTop}>
                 <h2>{module.name}</h2>
+                <button 
+                    className={styles.deleteButton} 
+                    onClick={handleDeleteClick}
+                    title="Usuń moduł"
+                >
+                    ×
+                </button>
             </div>
 
             <dl className={styles.details}>

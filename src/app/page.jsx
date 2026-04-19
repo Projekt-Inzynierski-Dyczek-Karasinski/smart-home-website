@@ -4,6 +4,7 @@ import useSWR from 'swr'
 
 import ModuleCard from '@/components/ModuleCard'
 import ModuleDetails from "@/components/ModuleDetails";
+import DeleteConfirmationPopup from "@/components/DeleteConfirmationPopup";
 
 import styles from "./page.module.css";
 
@@ -11,8 +12,10 @@ const fetcher = (...args) => fetch(...args).then(res => res.json())
 
 export default function Home() {
     const [selectedModule, setSelectedModule] = useState(null)
+    const [moduleToDelete, setModuleToDelete] = useState(null)
+    const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false)
 
-    const {data: moduleData, error, isLoading} = useSWR(`${process.env.NEXT_PUBLIC_API_URL}/api/modules`, fetcher)
+    const {data: moduleData, error, isLoading, mutate} = useSWR(`${process.env.NEXT_PUBLIC_API_URL}/api/modules`, fetcher)
     const {
         data: moduleDevicesData,
         error: devicesError,
@@ -23,6 +26,45 @@ export default function Home() {
             : null,
         fetcher
     )
+
+    const handleDeleteRequest = (module) => {
+        setModuleToDelete(module)
+        setIsDeletePopupOpen(true)
+    }
+
+    const handleDeleteConfirm = async () => {
+        if (moduleToDelete) {
+            try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/modules/${moduleToDelete.id}`, {
+                    method: 'DELETE',
+                })
+                
+                if (response.ok) {
+                    const updatedData = {
+                        ...moduleData,
+                        modules: moduleData.modules.filter(m => m.id !== moduleToDelete.id)
+                    }
+
+                    mutate(updatedData, false)
+
+                    if (selectedModule?.id === moduleToDelete.id) {
+                        setSelectedModule(null)
+                    }
+                } else {
+                    console.error('Błąd podczas usuwania modułu')
+                }
+            } catch (error) {
+                console.error('Błąd podczas usuwania modułu:', error)
+            }
+        }
+        setIsDeletePopupOpen(false)
+        setModuleToDelete(null)
+    }
+
+    const handleDeleteCancel = () => {
+        setIsDeletePopupOpen(false)
+        setModuleToDelete(null)
+    }
 
     if (error) return (
         <div className={styles.page}>
@@ -41,6 +83,7 @@ export default function Home() {
     )
 
     const modules = [...(moduleData?.modules ?? [])].sort((a, b) => a.id - b.id)
+    
     return (
         <div className={styles.page}>
             <main className={styles.main}>
@@ -54,16 +97,25 @@ export default function Home() {
 
                         <section className={styles.grid}>
                             {modules.map((module) => (
-                                <div key={module.id} onClick={() => {
-                                    setSelectedModule(module)
-                                }}>
-                                    <ModuleCard module={module}/>
+                                <div key={module.id}>
+                                    <ModuleCard
+                                        module={module}
+                                        onDelete={handleDeleteRequest}
+                                        onClick={() => setSelectedModule(module)}
+                                    />
                                 </div>
                             ))}
                         </section>
                     </>)
                 }
             </main>
+            
+            <DeleteConfirmationPopup
+                isOpen={isDeletePopupOpen}
+                moduleName={moduleToDelete?.name}
+                onConfirm={handleDeleteConfirm}
+                onCancel={handleDeleteCancel}
+            />
         </div>
     )
 }
