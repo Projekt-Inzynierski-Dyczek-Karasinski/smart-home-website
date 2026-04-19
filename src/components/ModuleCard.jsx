@@ -36,22 +36,13 @@ export default function ModuleCard({ module, onDelete, onClick }) {
 
             <dl className={styles.details}>
                 <div className={styles.detailRow}>
-                    <dt>Ostatnio online</dt>
-                    <dd>
-                        {module.last_online
-                            ? new Date(module.last_online).toLocaleString('pl-PL')
-                            : 'Brak danych'}
-                    </dd>
+                    <dt>Adres logiczny</dt>
+                    <dd>{module.logic_address}</dd>
                 </div>
 
                 <div className={styles.detailRow}>
                     <dt>Kanał radiowy</dt>
                     <dd>{module?.config?.connection?.rf_channel}</dd>
-                </div>
-
-                <div className={styles.detailRow}>
-                    <dt>Adres logiczny</dt>
-                    <dd>{module.logic_address}</dd>
                 </div>
 
                 <div className={styles.detailRow}>
@@ -61,6 +52,15 @@ export default function ModuleCard({ module, onDelete, onClick }) {
                         : batteryValue != null
                             ? `${batteryValue}%`
                             : 'brak danych'}</dd>
+                </div>
+
+                <div className={styles.detailRow}>
+                    <dt>Ostatnio online</dt>
+                    <dd>
+                        {module.last_online
+                            ? new Date(module.last_online).toLocaleString('pl-PL')
+                            : 'Brak danych'}
+                    </dd>
                 </div>
             </dl>
         </article>
