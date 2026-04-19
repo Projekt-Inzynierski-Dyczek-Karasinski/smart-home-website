@@ -102,7 +102,7 @@ export default function AddModulePopup({isOpen, onConfirm, onCancel}) {
         setLogicAddress('')
         setRfChannel('')
         setPowerSaving(true)
-        setSleepAfterSend(false)
+        setSleepAfterSend(true)
         setDefaultSleepDuration(3600000)
         setJsonConfig('')
         setError('')
