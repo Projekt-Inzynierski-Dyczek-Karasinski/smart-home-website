@@ -1,35 +1,57 @@
-import { useState } from 'react'
+import {useState} from 'react'
 import styles from './css/AddModulePopup.module.css'
 
-export default function AddModulePopup({ isOpen, onConfirm, onCancel }) {
+export default function AddModulePopup({isOpen, onConfirm, onCancel}) {
     const [jsonConfig, setJsonConfig] = useState('')
     const [error, setError] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
 
     if (!isOpen) return null
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         if (!jsonConfig.trim()) {
             setError('Konfiguracja nie może być pusta')
             return
         }
 
+        let parsedConfig
         try {
-            const parsedConfig = JSON.parse(jsonConfig)
-            onConfirm(parsedConfig)
-            setJsonConfig('')
-            setError('')
+            parsedConfig = JSON.parse(jsonConfig)
         } catch (e) {
             setError('Nieprawidłowy format JSON')
+            return
+        }
+
+        setIsLoading(true)
+        setError('')
+
+        try {
+            const success = await onConfirm(parsedConfig)
+            if (success) {
+                // Reset form only on success
+                setJsonConfig('')
+                setError('')
+            } else {
+                setError('Błędna konfiguracja')
+            }
+        } catch (e) {
+            setError('Błędna konfiguracja')
+        } finally {
+            setIsLoading(false)
         }
     }
 
+
+
     const handleCancel = () => {
+        if (isLoading) return // Prevent closing while loading
         onCancel()
         setJsonConfig('')
         setError('')
     }
 
     const handleTextareaChange = (e) => {
+        if (isLoading) return // Prevent editing while loading
         setJsonConfig(e.target.value)
         if (error) setError('')
     }
@@ -45,34 +67,25 @@ export default function AddModulePopup({ isOpen, onConfirm, onCancel }) {
                         className={styles.textarea}
                         value={jsonConfig}
                         onChange={handleTextareaChange}
-                        placeholder='{
-                          "values": {
-                            "name": "nazwa",
-                            "logic_address": 123,
-                            "config": {
-                              "connection": {"type": "radio", "rf_channel": 55},
-                              "power_saving": true,
-                              "sleep_after_send": true,
-                              "default_sleep_duration": 3600000
-                            }
-                          },
-                          "returning": "*"
-                        }'
+                        placeholder='{"name": "Nowy moduł", "logic_address": "0x1234", ...}'
                         rows={20}
+                        disabled={isLoading}
                     />
                     {error && <div className={styles.error}>{error}</div>}
                 </div>
 
                 <div className={styles.buttons}>
                     <button
-                        className={`${styles.button} ${styles.confirmButton}`}
+                        className={`${styles.button} ${styles.confirmButton} ${isLoading ? styles.loading : ''}`}
                         onClick={handleConfirm}
+                        disabled={isLoading}
                     >
-                        Zatwierdź
+                        {isLoading ? 'Dodawanie...' : 'Zatwierdź'}
                     </button>
                     <button
                         className={`${styles.button} ${styles.cancelButton}`}
                         onClick={handleCancel}
+                        disabled={isLoading}
                     >
                         Anuluj
                     </button>

@@ -82,16 +82,23 @@ export default function Home() {
                 },
                 body: JSON.stringify(config),
             })
-            
+
             if (response.ok) {
-                console.log('Moduł dodany pomyślnie, odświeżanie listy...')
+                console.log('Moduł dodany pomyślnie, oczekiwanie na przetworzenie...')
+
+                await new Promise(resolve => setTimeout(resolve, 1000))
+
+                console.log('Odświeżanie listy...')
                 await mutate()
                 setIsAddPopupOpen(false)
+                return true // Success
             } else {
                 console.error('Błąd podczas dodawania modułu:', response.status, response.statusText)
+                return false // Failure
             }
         } catch (error) {
             console.error('Błąd podczas dodawania modułu:', error)
+            return false // Failure
         }
     }
 

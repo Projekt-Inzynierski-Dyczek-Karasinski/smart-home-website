@@ -51,15 +51,25 @@
     min-width: 80px;
 }
 
+.button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
 .confirmButton {
     background: linear-gradient(145deg, #ef4444, #dc2626);
     color: white;
 }
 
-.confirmButton:hover {
+.confirmButton:hover:not(:disabled) {
     background: linear-gradient(145deg, #dc2626, #b91c1c);
     transform: translateY(-1px);
     box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+.confirmButton.loading {
+    background: linear-gradient(145deg, #dc2626, #b91c1c);
 }
 
 .cancelButton {
@@ -68,8 +78,7 @@
     border: 1px solid rgba(140, 170, 210, 0.2);
 }
 
-.cancelButton:hover {
+.cancelButton:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.12);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(140, 170, 210, 0.1);
 }
