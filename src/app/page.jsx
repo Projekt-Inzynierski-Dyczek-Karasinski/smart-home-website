@@ -5,6 +5,8 @@ import useSWR from 'swr'
 import ModuleCard from '@/components/ModuleCard'
 import ModuleDetails from "@/components/ModuleDetails";
 import DeleteConfirmationPopup from "@/components/DeleteConfirmationPopup";
+import AddModuleCard from "@/components/AddModuleCard";
+import AddModulePopup from "@/components/AddModulePopup";
 
 import styles from "./page.module.css";
 
@@ -14,6 +16,7 @@ export default function Home() {
     const [selectedModule, setSelectedModule] = useState(null)
     const [moduleToDelete, setModuleToDelete] = useState(null)
     const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false)
+    const [isAddPopupOpen, setIsAddPopupOpen] = useState(false)
 
     const {data: moduleData, error, isLoading, mutate} = useSWR(`${process.env.NEXT_PUBLIC_API_URL}/api/modules`, fetcher)
     const {
@@ -51,7 +54,7 @@ export default function Home() {
                         setSelectedModule(null)
                     }
                 } else {
-                    console.error('Błąd podczas usuwania modułu')
+                    console.error('Błąd podczas usuwania modułu:', response.status, response.statusText)
                 }
             } catch (error) {
                 console.error('Błąd podczas usuwania modułu:', error)
@@ -64,6 +67,36 @@ export default function Home() {
     const handleDeleteCancel = () => {
         setIsDeletePopupOpen(false)
         setModuleToDelete(null)
+    }
+
+    const handleAddModule = () => {
+        setIsAddPopupOpen(true)
+    }
+
+    const handleAddConfirm = async (config) => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/modules`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(config),
+            })
+            
+            if (response.ok) {
+                console.log('Moduł dodany pomyślnie, odświeżanie listy...')
+                await mutate()
+                setIsAddPopupOpen(false)
+            } else {
+                console.error('Błąd podczas dodawania modułu:', response.status, response.statusText)
+            }
+        } catch (error) {
+            console.error('Błąd podczas dodawania modułu:', error)
+        }
+    }
+
+    const handleAddCancel = () => {
+        setIsAddPopupOpen(false)
     }
 
     if (error) return (
@@ -105,6 +138,9 @@ export default function Home() {
                                     />
                                 </div>
                             ))}
+                            <div>
+                                <AddModuleCard onClick={handleAddModule} />
+                            </div>
                         </section>
                     </>)
                 }
@@ -115,6 +151,12 @@ export default function Home() {
                 moduleName={moduleToDelete?.name}
                 onConfirm={handleDeleteConfirm}
                 onCancel={handleDeleteCancel}
+            />
+            
+            <AddModulePopup
+                isOpen={isAddPopupOpen}
+                onConfirm={handleAddConfirm}
+                onCancel={handleAddCancel}
             />
         </div>
     )
