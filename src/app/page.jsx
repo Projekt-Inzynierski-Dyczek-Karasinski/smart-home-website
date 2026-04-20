@@ -53,11 +53,9 @@ export default function Home() {
                     if (selectedModule?.id === moduleToDelete.id) {
                         setSelectedModule(null)
                     }
-                } else {
-                    console.error('Błąd podczas usuwania modułu:', response.status, response.statusText)
                 }
             } catch (error) {
-                console.error('Błąd podczas usuwania modułu:', error)
+                console.error(error)
             }
         }
         setIsDeletePopupOpen(false)
@@ -84,20 +82,16 @@ export default function Home() {
             })
 
             if (response.ok) {
-                console.log('Moduł dodany pomyślnie, oczekiwanie na przetworzenie...')
 
                 await new Promise(resolve => setTimeout(resolve, 1000))
 
-                console.log('Odświeżanie listy...')
                 await mutate()
                 setIsAddPopupOpen(false)
                 return true // Success
             } else {
-                console.error('Błąd podczas dodawania modułu:', response.status, response.statusText)
                 return false // Failure
             }
         } catch (error) {
-            console.error('Błąd podczas dodawania modułu:', error)
             return false // Failure
         }
     }

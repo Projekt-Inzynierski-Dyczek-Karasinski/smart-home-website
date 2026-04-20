@@ -13,7 +13,7 @@ export default function ModuleCard({ module, onDelete, onClick }) {
     const batteryValue = batteryData?.device_readings?.[0]?.value
 
     const handleDeleteClick = (e) => {
-        e.stopPropagation() // Zapobiegamy otwieraniu szczegółów modułu
+        e.stopPropagation()
         onDelete?.(module)
     }
 

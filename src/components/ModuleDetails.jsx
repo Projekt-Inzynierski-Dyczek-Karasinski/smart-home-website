@@ -60,7 +60,6 @@ export default function ModuleDetails({ module, onBack }) {
     }
 
     const handleDeviceAdded = () => {
-        // Odśwież listę urządzeń po dodaniu nowego
         mutateDevices()
     }
 
@@ -68,7 +67,6 @@ export default function ModuleDetails({ module, onBack }) {
         try {
             const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/modules/${module.id}`;
 
-            // Sprawdź czy logic_address się zmienił
             if (editedValues.logic_address !== (module?.logic_address ?? '')) {
                 const response1 = await fetch(baseUrl, {
                     method: 'PATCH',
@@ -87,7 +85,6 @@ export default function ModuleDetails({ module, onBack }) {
                 }
             }
 
-            // Sprawdź czy rf_channel się zmienił
             if (editedValues.rf_channel !== (module?.config?.connection?.rf_channel ?? '')) {
                 const response2 = await fetch(baseUrl, {
                     method: 'PATCH',
@@ -106,9 +103,6 @@ export default function ModuleDetails({ module, onBack }) {
                 }
             }
 
-            console.log('Zmiany zostały zapisane pomyślnie');
-
-            // Aktualizuj lokalne wartości modułu tylko po udanym zapisie
             module.logic_address = editedValues.logic_address;
             if (module.config && module.config.connection) {
                 module.config.connection.rf_channel = editedValues.rf_channel;
@@ -116,10 +110,6 @@ export default function ModuleDetails({ module, onBack }) {
 
             setIsEditing(false);
             setHasChanges(false);
-
-            // Opcjonalnie: odświeżenie danych modułu
-            // mutate() jeśli używasz SWR do pobierania danych modułu
-
         } catch (error) {
             console.error('Błąd podczas zapisywania zmian:', error);
             alert('Błąd');

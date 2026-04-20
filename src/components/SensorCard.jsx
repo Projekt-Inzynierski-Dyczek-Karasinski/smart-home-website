@@ -18,7 +18,6 @@ export default function SensorCard({ device, moduleId, onDeviceDeleted }) {
         `${process.env.NEXT_PUBLIC_API_URL}/api/modules/${moduleId}/devices/${device.logic_id}/readings?limit=1`,
         fetcher
     )
-
     const reading = forcedReading ?? readingsData?.device_readings?.[0]
     const rawValues = Array.isArray(reading?.value) ? reading.value : [reading?.value]
 
@@ -74,9 +73,6 @@ export default function SensorCard({ device, moduleId, onDeviceDeleted }) {
                 throw new Error('Błąd podczas usuwania sensora')
             }
 
-            console.log('Sensor został usunięty pomyślnie')
-            
-            // Wywołaj callback aby odświeżyć listę urządzeń
             if (onDeviceDeleted) {
                 onDeviceDeleted()
             }
@@ -122,6 +118,7 @@ export default function SensorCard({ device, moduleId, onDeviceDeleted }) {
                         <span className={styles.lastValuesLabel}>{sectionLabel}</span>
                         <div className={styles.valuesList}>
                             {values.map((value) => {
+
                                 const raw = rawValues[value.index]
                                 const precision = value.precision ?? 0
                                 const displayValue = raw != null

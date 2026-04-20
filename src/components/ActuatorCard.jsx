@@ -58,16 +58,9 @@ export default function ActuatorCard({ device, moduleId, onDeviceDeleted }) {
                 throw new Error('Błąd przełączania')
             }
 
-            // await mutate()
-            // TODO change back to await mutate() when backed API will be fixed
-            const nextValue = currentValue === 1 ? 2 : 1
-            await mutate({ ...valueData, result: nextValue }, false)
+            await mutate()
         } catch (error) {
-            // TODO delete when backed API will be fixed
-            const nextValue = currentValue === 1 ? 2 : 1
-            await mutate({ ...valueData, result: nextValue }, false)
-
-            // setToggleError(true) 
+            setToggleError(true)
         } finally {
             setToggleLoading(false)
         }
@@ -89,16 +82,12 @@ export default function ActuatorCard({ device, moduleId, onDeviceDeleted }) {
                 throw new Error('Błąd podczas usuwania aktuatora')
             }
 
-            console.log('Aktuator został usunięty pomyślnie')
-            
-            // Wywołaj callback aby odświeżyć listę urządzeń
             if (onDeviceDeleted) {
                 onDeviceDeleted()
             }
 
             setShowDeletePopup(false)
         } catch (error) {
-            console.error('Błąd podczas usuwania aktuatora:', error)
             alert('Błąd podczas usuwania aktuatora')
         } finally {
             setDeleteLoading(false)

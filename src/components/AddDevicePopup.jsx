@@ -32,7 +32,6 @@ export default function AddDevicePopup({ isOpen, onClose, deviceType, moduleId, 
         setIsSubmitting(true)
         setError('')
 
-        // Walidacja
         if (!formData.name.trim()) {
             setError('Nazwa nie może być pusta')
             setIsSubmitting(false)
@@ -52,7 +51,6 @@ export default function AddDevicePopup({ isOpen, onClose, deviceType, moduleId, 
             return
         }
 
-        // Parsowanie JSON config
         let config = {}
         if (formData.jsonConfig.trim()) {
             try {
@@ -64,7 +62,6 @@ export default function AddDevicePopup({ isOpen, onClose, deviceType, moduleId, 
             }
         }
 
-        // Przygotowanie body zapytania
         const requestBody = {
             values: {
                 name: formData.name.trim(),
@@ -90,9 +87,7 @@ export default function AddDevicePopup({ isOpen, onClose, deviceType, moduleId, 
             }
 
             const result = await response.json()
-            console.log(`${deviceType} został dodany pomyślnie:`, result)
 
-            // Wywołaj callback aby odświeżyć listę urządzeń
             if (onDeviceAdded) {
                 onDeviceAdded()
             }
