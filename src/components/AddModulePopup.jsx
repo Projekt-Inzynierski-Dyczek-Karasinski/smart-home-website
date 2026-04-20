@@ -197,8 +197,8 @@ export default function AddModulePopup({isOpen, onConfirm, onCancel}) {
                         className={styles.textarea}
                         value={jsonConfig}
                         onChange={handleTextareaChange}
-                        placeholder='{"custom_setting": "value", "another_option": true}'
-                        rows={8}
+                        placeholder='{"custom_setting": "value"}'
+                        rows={2}
                         disabled={isLoading}
                     />
                     {error && <div className={styles.error}>{error}</div>}

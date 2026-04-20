@@ -7,6 +7,7 @@ import { useState } from 'react'
 import SensorCard from "@/components/SensorCard";
 import ActuatorCard from "@/components/ActuatorCard";
 import SensorReadingsChart from "@/components/SensorReadingsChart";
+import AddDevicePopup from "@/components/AddDevicePopup";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
@@ -17,8 +18,10 @@ export default function ModuleDetails({ module, onBack }) {
         rf_channel: module?.config?.connection?.rf_channel ?? ''
     })
     const [hasChanges, setHasChanges] = useState(false)
+    const [showAddDevicePopup, setShowAddDevicePopup] = useState(false)
+    const [deviceTypeToAdd, setDeviceTypeToAdd] = useState(null)
 
-    const { data: moduleDevicesData, error: devicesError, isLoading: devicesLoading } = useSWR(
+    const { data: moduleDevicesData, error: devicesError, isLoading: devicesLoading, mutate: mutateDevices } = useSWR(
         module ? `${process.env.NEXT_PUBLIC_API_URL}/api/modules/${module.id}/devices` : null,
         fetcher
     )
@@ -46,67 +49,82 @@ export default function ModuleDetails({ module, onBack }) {
         setHasChanges(false)
     }
 
-    const handleSaveClick = async () => {
-    try {
-        const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/modules/${module.id}`;
-        
-        // Sprawdź czy logic_address się zmienił
-        if (editedValues.logic_address !== (module?.logic_address ?? '')) {
-            const response1 = await fetch(baseUrl, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    mode: "overwrite",
-                    path: "logic_address",
-                    value: parseInt(editedValues.logic_address) || editedValues.logic_address
-                })
-            });
-            
-            if (!response1.ok) {
-                throw new Error('Błąd podczas aktualizacji logic_address');
-            }
-        }
-
-        // Sprawdź czy rf_channel się zmienił
-        if (editedValues.rf_channel !== (module?.config?.connection?.rf_channel ?? '')) {
-            const response2 = await fetch(baseUrl, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    mode: "overwrite",
-                    path: "config.connection.rf_channel",
-                    value: parseInt(editedValues.rf_channel) || editedValues.rf_channel
-                })
-            });
-            
-            if (!response2.ok) {
-                throw new Error('Błąd podczas aktualizacji rf_channel');
-            }
-        }
-
-        console.log('Zmiany zostały zapisane pomyślnie');
-        
-        // Aktualizuj lokalne wartości modułu tylko po udanym zapisie
-        module.logic_address = editedValues.logic_address;
-        if (module.config && module.config.connection) {
-            module.config.connection.rf_channel = editedValues.rf_channel;
-        }
-        
-        setIsEditing(false);
-        setHasChanges(false);
-        
-        // Opcjonalnie: odświeżenie danych modułu
-        // mutate() jeśli używasz SWR do pobierania danych modułu
-        
-    } catch (error) {
-        console.error('Błąd podczas zapisywania zmian:', error);
-        alert('Błąd');
+    const handleAddDeviceClick = (deviceType) => {
+        setDeviceTypeToAdd(deviceType)
+        setShowAddDevicePopup(true)
     }
-}
+
+    const handleCloseAddDevicePopup = () => {
+        setShowAddDevicePopup(false)
+        setDeviceTypeToAdd(null)
+    }
+
+    const handleDeviceAdded = () => {
+        // Odśwież listę urządzeń po dodaniu nowego
+        mutateDevices()
+    }
+
+    const handleSaveClick = async () => {
+        try {
+            const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/modules/${module.id}`;
+
+            // Sprawdź czy logic_address się zmienił
+            if (editedValues.logic_address !== (module?.logic_address ?? '')) {
+                const response1 = await fetch(baseUrl, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        mode: "overwrite",
+                        path: "logic_address",
+                        value: parseInt(editedValues.logic_address) || editedValues.logic_address
+                    })
+                });
+
+                if (!response1.ok) {
+                    throw new Error('Błąd podczas aktualizacji logic_address');
+                }
+            }
+
+            // Sprawdź czy rf_channel się zmienił
+            if (editedValues.rf_channel !== (module?.config?.connection?.rf_channel ?? '')) {
+                const response2 = await fetch(baseUrl, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        mode: "overwrite",
+                        path: "config.connection.rf_channel",
+                        value: parseInt(editedValues.rf_channel) || editedValues.rf_channel
+                    })
+                });
+
+                if (!response2.ok) {
+                    throw new Error('Błąd podczas aktualizacji rf_channel');
+                }
+            }
+
+            console.log('Zmiany zostały zapisane pomyślnie');
+
+            // Aktualizuj lokalne wartości modułu tylko po udanym zapisie
+            module.logic_address = editedValues.logic_address;
+            if (module.config && module.config.connection) {
+                module.config.connection.rf_channel = editedValues.rf_channel;
+            }
+
+            setIsEditing(false);
+            setHasChanges(false);
+
+            // Opcjonalnie: odświeżenie danych modułu
+            // mutate() jeśli używasz SWR do pobierania danych modułu
+
+        } catch (error) {
+            console.error('Błąd podczas zapisywania zmian:', error);
+            alert('Błąd');
+        }
+    }
 
     const handleInputChange = (field, value) => {
         setEditedValues(prev => ({
@@ -201,34 +219,58 @@ export default function ModuleDetails({ module, onBack }) {
                 </div>
 
                 <div className={styles.detailBox}>
-                <h2>Sensory</h2>
-
-                {sensors.length === 0 ? (
-                    <p className={styles.emptyState}>Brak sensorów</p>
-                ) : (
-                    <div className={styles.devicesList}>
-                        {sensors.map(device => (
-                            <SensorCard key={device.id} device={device} moduleId={module.id} />
-                        ))}
+                    <div className={styles.deviceSectionHeader}>
+                        <h2>Sensory</h2>
+                        <button 
+                            className={styles.addDeviceButton}
+                            onClick={() => handleAddDeviceClick('sensor')}
+                        >
+                            Dodaj Sensor
+                        </button>
                     </div>
-                )}
-            </div>
-            <SensorReadingsChart sensors={sensors} moduleId={module.id} />
 
-            <div className={styles.detailBox}>
-                <h2>Aktuatory</h2>
+                    {sensors.length === 0 ? (
+                        <p className={styles.emptyState}>Brak sensorów</p>
+                    ) : (
+                        <div className={styles.devicesList}>
+                            {sensors.map(device => (
+                                <SensorCard key={device.id} device={device} moduleId={module.id} />
+                            ))}
+                        </div>
+                    )}
+                </div>
+                <SensorReadingsChart sensors={sensors} moduleId={module.id} />
 
-                {actuators.length === 0 ? (
-                    <p className={styles.emptyState}>Brak aktuatorów</p>
-                ) : (
-                    <div className={styles.devicesList}>
-                        {actuators.map(device => (
-                            <ActuatorCard device={device} moduleId={module.id} key={device.id} />
-                        ))}
+                <div className={styles.detailBox}>
+                    <div className={styles.deviceSectionHeader}>
+                        <h2>Aktuatory</h2>
+                        <button 
+                            className={styles.addDeviceButton}
+                            onClick={() => handleAddDeviceClick('actuator')}
+                        >
+                            Dodaj Aktuator
+                        </button>
                     </div>
-                )}
-            </div>
-        </section>
-    </div>
+
+                    {actuators.length === 0 ? (
+                        <p className={styles.emptyState}>Brak aktuatorów</p>
+                    ) : (
+                        <div className={styles.devicesList}>
+                            {actuators.map(device => (
+                                <ActuatorCard device={device} moduleId={module.id} key={device.id} />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            <AddDevicePopup
+                isOpen={showAddDevicePopup}
+                onClose={handleCloseAddDevicePopup}
+                deviceType={deviceTypeToAdd}
+                moduleId={module.id}
+                onDeviceAdded={handleDeviceAdded}
+            />
+        </div>
     )
 }
